@@ -13,6 +13,8 @@ A simple desktop application to convert images into ASCII art using Python. User
 - Adjust edge detection sensitivity using a slider or numeric input.
 - Save rendered ASCII images to a folder of your choice.
 
+**NOTE**: GUI saves output with "_ascii" appended to picture name. Use CLI to save with same name
+
 ## Installation
 ### Option 1: Run executable
 1) Download the latest release from the [Releases](https://github.com/asbou45115/ascii_renderer/releases)
@@ -21,7 +23,7 @@ A simple desktop application to convert images into ASCII art using Python. User
 3) Double-click main.exe to open the GUI.
 4) Load images, adjust settings, and render ASCII art.
 
-### Option 2: Run from source code
+### Option 2: CLI
 1) Clone repo:
     ```bash
     git clone https://github.com/asbou45115/ascii_renderer.git
@@ -45,14 +47,24 @@ A simple desktop application to convert images into ASCII art using Python. User
 
 4) Run application:
     ```bash
-    python AsciiApp.py
+    python main.py <input_file/input_folder> <output_file/output_folder> [--upscale_width UPSCALE_WIDTH] [--upscale_height UPSCALE_HEIGHT] [--edge_tolerance EDGE_TOLERANCE]
     ```
     OR 
     ```bash
-    uv run AsciiApp.py
+    uv run  main.py main.py <input_file/input_folder> <output_file/output_folder> [--upscale_width UPSCALE_WIDTH] [--upscale_height UPSCALE_HEIGHT] [--edge_tolerance EDGE_TOLERANCE]
     ```
 
-### How it Works
+    Usage Examples:
+    - Single image:
+      ```bash
+      python main.py images/image.png output/image.png --upscale_width 1920 --upscale_height 1080 --edge_tolerance 15
+      ```
+   -  Folder of images:
+      ```bash
+      python main.py images/ output/ --upscale_width 1280 --upscale_height 720 --edge_tolerance 10
+      ```   
+
+## How it Works
 The ASCII Renderer converts images into ASCII art using a combination of image processing and character mapping. Here's a step-by-step breakdown:
 
 1) **Image Loading and Upscaling**  
