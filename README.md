@@ -68,7 +68,7 @@ The ASCII Renderer converts images into ASCII art using a combination of image p
 
 4) **Brightness Mapping to ASCII Characters**  
    - Each cell's average brightness is mapped to a character in a **predefined ASCII set**: `" .:coPO?@■"`, from darkest to brightest.  
-   - This ensures brighter areas are represented by dense characters (e.g., `@`, `■`) and darker areas by lighter ones (e.g., `.`, space).
+   - This ensures brighter areas are represented by dense characters (e.g., `@`, `■`) and darker areas by lighter ones (e.g., `.`, ` `).
 
 5) **Edges**  
    - To emphasise edges, the renderer applies a **Difference of Gaussians (DoG)** filter:  
