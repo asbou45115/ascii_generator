@@ -15,29 +15,29 @@ class Renderer:
         pass
     
     @staticmethod
-    def get_image_from_file(file_path: str) -> np.ndarray:
+    def get_image_from_file(file_path: str, upscale_height: int=1080, upscale_width: int=1920) -> np.ndarray:
         '''
-        Reads image and upscales image if less than HD
+        Reads image and upscales image if less than given upscale values
         '''
         img = cv2.imread(file_path)
         if img is None:
             print(f"Error: could not load image at {file_path}")
             return None
-        
-        # Only upscale if smaller than Full HD
+
         h, w = img.shape[:2]
-        if w < 1920 or h < 1080:
-            height = int(img.shape[0] * (1920 / img.shape[1]))
-            img = cv2.resize(img, (1920, height), interpolation=cv2.INTER_LANCZOS4)
-        
+        if w < upscale_width or h < upscale_height:
+            scale = upscale_width / w
+            height = int(h * scale)
+            img = cv2.resize(img, (upscale_width, height), interpolation=cv2.INTER_LANCZOS4)
+
         return img
     
     @staticmethod
-    def render_as_ascii(image: np.ndarray) -> cv2.typing.MatLike:
+    def render_as_ascii(image: np.ndarray, edge_tolerance: int=13) -> cv2.typing.MatLike:
         '''
         Renders given image and returns the image
         '''
-        ascii_matrix, edge_mask, angle = image_to_ascii_matrix(image)
+        ascii_matrix, edge_mask, angle = image_to_ascii_matrix(image, edge_tolerance)
         
         height, width = ascii_matrix.shape
         output_img = np.zeros((height, width, 3), dtype=np.uint8)
@@ -81,7 +81,7 @@ class Renderer:
         cv2.imwrite(output_path, render)
         print(f"saved to {output_path}")
         
-def image_to_ascii_matrix(image: np.ndarray) -> np.ndarray:
+def image_to_ascii_matrix(image: np.ndarray, edge_tolerance: int) -> np.ndarray:
     '''
     Downscales then upscales image to fit 8x8 ascii character size
     '''
@@ -112,7 +112,7 @@ def image_to_ascii_matrix(image: np.ndarray) -> np.ndarray:
     angle = np.arctan2(gy, gx)
     
     mag_norm = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX)
-    edge_mask = (mag_norm > 13).astype(np.uint8) * 255
+    edge_mask = (mag_norm > edge_tolerance).astype(np.uint8) * 255
     
     # Upscaling
     indices_up = cv2.resize(indices, (gray_img.shape[1], gray_img.shape[0]), interpolation=cv2.INTER_NEAREST)
