@@ -17,16 +17,18 @@ class Renderer:
     @staticmethod
     def get_image_from_file(file_path: str) -> np.ndarray:
         '''
-        Reads and scales the image to full HD
+        Reads image and upscales image if less than HD
         '''
         img = cv2.imread(file_path)
         if img is None:
             print(f"Error: could not load image at {file_path}")
             return None
         
-        # Resize to Full HD width while maintaining aspect ratio
-        height = int(img.shape[0] * (1920 / img.shape[1]))
-        img = cv2.resize(img, (1920, height), interpolation=cv2.INTER_LANCZOS4)
+        # Only upscale if smaller than Full HD
+        h, w = img.shape[:2]
+        if w < 1920 or h < 1080:
+            height = int(img.shape[0] * (1920 / img.shape[1]))
+            img = cv2.resize(img, (1920, height), interpolation=cv2.INTER_LANCZOS4)
         
         return img
     
