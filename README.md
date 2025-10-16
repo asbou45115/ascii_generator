@@ -12,6 +12,7 @@ A simple desktop application to convert images into ASCII art using Python. User
 - Adjust upscale resolution: choose from presets or enter custom width/height.
 - Adjust edge detection sensitivity using a slider or numeric input.
 - Save rendered ASCII images to a folder of your choice.
+   - Or print as ASCII text
 
 **NOTE**: GUI saves output with "_ascii" appended to picture name. Use CLI to save with same name
 
@@ -47,14 +48,14 @@ A simple desktop application to convert images into ASCII art using Python. User
 
 4) Run application:
     ```bash
-    python main.py <input_file/input_folder> <output_file/output_folder> [--upscale_width UPSCALE_WIDTH] [--upscale_height UPSCALE_HEIGHT] [--edge_tolerance EDGE_TOLERANCE]
+    python main.py <input_file/input_folder> <output_file/output_folder> [--upscale_width UPSCALE_WIDTH] [--upscale_height UPSCALE_HEIGHT] [--edge_tolerance EDGE_TOLERANCE] [--text]
     ```
     OR 
     ```bash
-    uv run  main.py main.py <input_file/input_folder> <output_file/output_folder> [--upscale_width UPSCALE_WIDTH] [--upscale_height UPSCALE_HEIGHT] [--edge_tolerance EDGE_TOLERANCE]
+    uv run main.py <input_file/input_folder> <output_file/output_folder> [--upscale_width UPSCALE_WIDTH] [--upscale_height UPSCALE_HEIGHT] [--edge_tolerance EDGE_TOLERANCE] [--text]
     ```
 
-    Usage Examples:
+    Usage Examples (use python or uv run):
     - Single image:
       ```bash
       python main.py images/image.png output/image.png --upscale_width 1920 --upscale_height 1080 --edge_tolerance 15
@@ -62,7 +63,19 @@ A simple desktop application to convert images into ASCII art using Python. User
    -  Folder of images:
       ```bash
       python main.py images/ output/ --upscale_width 1280 --upscale_height 720 --edge_tolerance 10
-      ```   
+      ```
+
+   For terminal print (one image):
+      ```bash
+      python main.py images/image.png output/image.png --upscale_width 1920 --upscale_height 1080 --edge_tolerance 15 --text # Can add >> ascii.txt to output ASCII to text file
+      ```
+   Arguments:
+   - `<input_path>` – Path to an image file or folder of images.
+   - `<output_path>` – Output file or folder path.
+   - `--width / --height` – Upscale dimensions (optional).
+   - `--edge` – Edge tolerance for detail sensitivity (optional, default: 13).
+   - `--text` – Prints ASCII art directly to the terminal instead of saving an image.
+      
 
 ## How it Works
 The ASCII Renderer converts images into ASCII art using a combination of image processing and character mapping. Here's a step-by-step breakdown:

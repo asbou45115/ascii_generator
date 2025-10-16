@@ -41,6 +41,10 @@ class AsciiApp(QMainWindow):
         self.save_btn.clicked.connect(self.save_renders)
         self.save_btn.setEnabled(False)
 
+        self.copy_btn = QPushButton("Copy ASCII to Clipboard")
+        self.copy_btn.clicked.connect(self.copy_to_clipboard)
+        self.copy_btn.setEnabled(False)
+
         # --- Resolution dropdown ---
         self.resolution_combo = QComboBox()
         self.resolution_combo.addItems([
@@ -88,6 +92,7 @@ class AsciiApp(QMainWindow):
         button_layout.addWidget(self.load_btn)
         button_layout.addWidget(self.render_btn)
         button_layout.addWidget(self.save_btn)
+        button_layout.addWidget(self.copy_btn)
         button_layout.addWidget(self.resolution_combo)
         button_layout.addWidget(self.width_label)
         button_layout.addWidget(self.width_input)
@@ -122,7 +127,6 @@ class AsciiApp(QMainWindow):
 
         is_custom = text == "Custom"
 
-        # Toggle visibility of custom boxes
         self.width_input.setVisible(is_custom)
         self.height_input.setVisible(is_custom)
         self.width_label.setVisible(is_custom)
@@ -132,7 +136,6 @@ class AsciiApp(QMainWindow):
             self.upscale_width, self.upscale_height = options[text]
             self.statusBar().showMessage(f"Resolution set to {text}")
         else:
-            # Restore previously entered custom values
             self.width_input.setText(str(self.custom_w))
             self.height_input.setText(str(self.custom_h))
             self.statusBar().showMessage("Enter custom width and height")
@@ -194,21 +197,29 @@ class AsciiApp(QMainWindow):
 
         if self.renders:
             self._show_cv_image(self.output_label, self.renders[0][1])
+            self.copy_btn.setEnabled(True)
 
         self.statusBar().showMessage(f"Rendered {len(self.renders)} image(s)")
         self.save_btn.setEnabled(True)
+
+    def copy_to_clipboard(self):
+        """Convert the current render to ASCII text and copy to clipboard."""
+        if not self.file_paths:
+            return
+        img = Renderer.get_image_from_file(self.file_paths[0], self.upscale_height, self.upscale_width)
+        Renderer.copy_ascii_to_clipboard(img, edge_tolerance=self.edge_tolerance)
+        self.statusBar().showMessage("ASCII copied to clipboard!")
 
     def save_renders(self):
         """Save all rendered ASCII images to a user-chosen folder."""
         if not hasattr(self, "renders") or not self.renders:
             return
 
-        # Open folder selection dialog
         folder = QFileDialog.getExistingDirectory(
             self, "Select folder to save ASCII renders"
         )
         if not folder:
-            return  # user cancelled
+            return
 
         for path, render in self.renders:
             base_name = os.path.basename(path)

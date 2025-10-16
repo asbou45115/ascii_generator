@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import pyperclip
 
 CHARS = np.array(list(" .:coPO?@■"))   # ascii characters in order of luminance (darkest to brightest)
 CHAR_PIXEL_SIZE = 8                     # ascii characters are 8x8 pixels
@@ -75,11 +76,57 @@ class Renderer:
     @staticmethod
     def save_render(render: cv2.typing.MatLike, output_path: str="output.png"):
         '''
-        Saves ascii render to given path
+        Saves ascii render as image to given path
         - if not path given, will be saved to current directory as output.png
         '''
         cv2.imwrite(output_path, render)
         print(f"saved to {output_path}")
+        
+    @staticmethod
+    def render_ascii_to_text(image: np.ndarray, edge_tolerance: int=13) -> str:
+        '''
+        Converts an image to ASCII text string for terminal or clipboard
+        '''
+        ascii_matrix, edge_mask, angle = image_to_ascii_matrix(image, edge_tolerance)
+        height, width = ascii_matrix.shape
+
+        ascii_lines = []
+        for y in range(0, height, CHAR_PIXEL_SIZE):
+            line = []
+            for x in range(0, width, CHAR_PIXEL_SIZE):
+                char = CHARS[ascii_matrix[y, x]]
+                if edge_mask[y, x] > 0:
+                    ang = (np.degrees(angle[y, x]) + 180) % 180
+                    if 22.5 < ang <= 67.5:
+                        char = '/'
+                    elif 67.5 < ang <= 112.5:
+                        char = '|'
+                    elif 112.5 < ang <= 157.5:
+                        char = '\\'
+                    else:
+                        char = '-'
+                line.append(char)
+            ascii_lines.append(''.join(line))
+        return "\n".join(ascii_lines)
+    
+    @staticmethod
+    def print_ascii(image: np.ndarray, edge_tolerance: int=13):
+        '''
+        Prints ASCII directly to terminal
+        '''
+        ascii_text = Renderer.render_ascii_to_text(image, edge_tolerance)
+        print(ascii_text)
+        return ascii_text
+
+    @staticmethod
+    def copy_ascii_to_clipboard(image: np.ndarray, edge_tolerance: int=13):
+        '''
+        Copies ASCII text version to clipboard (for GUI)
+        '''
+        ascii_text = Renderer.render_ascii_to_text(image, edge_tolerance)
+        pyperclip.copy(ascii_text)
+        print("ASCII art copied to clipboard!")
+        return ascii_text
         
 def image_to_ascii_matrix(image: np.ndarray, edge_tolerance: int) -> np.ndarray:
     '''
