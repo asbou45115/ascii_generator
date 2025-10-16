@@ -1,8 +1,14 @@
 import numpy as np
 import cv2
 
-CHARS = np.array(list(" .:coPO?#@■"))   # ascii characters in order of luminance (darkest to brightest)
+CHARS = np.array(list(" .:coPO?@■"))   # ascii characters in order of luminance (darkest to brightest)
 CHAR_PIXEL_SIZE = 8                     # ascii characters are 8x8 pixels
+EDGE_CHARS = {
+    0: '-',
+    45:  '/',
+    90: '|',
+    135: '\\'
+}
 
 class Renderer:
     def  __init__(self):
@@ -10,10 +16,17 @@ class Renderer:
     
     @staticmethod
     def get_image_from_file(file_path: str) -> np.ndarray:
+        '''
+        Reads and scales the image to full HD
+        '''
         img = cv2.imread(file_path)
         if img is None:
             print(f"Error: could not load image at {file_path}")
             return None
+        
+        # Resize to Full HD width while maintaining aspect ratio
+        height = int(img.shape[0] * (1920 / img.shape[1]))
+        img = cv2.resize(img, (1920, height), interpolation=cv2.INTER_LANCZOS4)
         
         return img
     
@@ -22,25 +35,39 @@ class Renderer:
         '''
         Renders given image and returns the image
         '''
-        ascii_matrix = image_to_ascii_matrix(image)
+        ascii_matrix, edge_mask, angle = image_to_ascii_matrix(image)
         
         height, width = ascii_matrix.shape
-        output_img = np.ones((height, width, 3), dtype=np.uint8)
-        
+        output_img = np.zeros((height, width, 3), dtype=np.uint8)
+        color = (255, 255, 255)
+
         for y in range(0, height, CHAR_PIXEL_SIZE):
             for x in range(0, width, CHAR_PIXEL_SIZE):
-                char =  CHARS[ascii_matrix[y, x]]
+                char = CHARS[ascii_matrix[y, x]]
+
+                # If it's an edge, choose edge character based on angle
+                if edge_mask[y, x] > 0:
+                    ang = (np.degrees(angle[y, x]) + 180) % 180
+                    if 22.5 < ang <= 67.5:
+                        char = '/'
+                    elif 67.5 < ang <= 112.5:
+                        char = '|'
+                    elif 112.5 < ang <= 157.5:
+                        char = '\\'
+                    else:
+                        char = '-'
+
                 cv2.putText(
-                    img=output_img,
-                    text=char,
-                    org=(x, y + CHAR_PIXEL_SIZE),
-                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=0.35,
-                    color=(255, 255, 255),
-                    thickness=1,
-                    lineType=cv2.LINE_AA
+                    output_img,
+                    char,
+                    (x, y + CHAR_PIXEL_SIZE),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.35,
+                    color,
+                    1,
+                    cv2.LINE_AA
                 )
-                
+
         return output_img
         
     @staticmethod
@@ -58,20 +85,37 @@ def image_to_ascii_matrix(image: np.ndarray) -> np.ndarray:
     '''
     gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
+    # Difference of Gaussians to boost contrast to apply sobel edge detection on
+    blur1 = cv2.GaussianBlur(gray_img, (0, 0), sigmaX=1.0)
+    blur2 = cv2.GaussianBlur(gray_img, (0, 0), sigmaX=4.0)
+    dog = cv2.subtract(blur1, blur2)
+    dog = cv2.normalize(dog, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+    
     downscaled = cv2.resize(
         gray_img,
         (gray_img.shape[1] // CHAR_PIXEL_SIZE, gray_img.shape[0] // CHAR_PIXEL_SIZE),
         interpolation=cv2.INTER_AREA
-        )
-    
-    # Map brightness (0-255) -> ascii index
-    indices = np.clip((downscaled / 255 * (len(CHARS) - 1)), 0, len(CHARS) - 1).astype(np.uint8)
-    
-    upscaled = cv2.resize(
-        indices,
-        (gray_img.shape[1], gray_img.shape[0]),
-        interpolation=cv2.INTER_NEAREST
     )
+
+    # Normalize downscaled to use full 0-255 range
+    downscaled = cv2.normalize(downscaled, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+
+    # Now map brightness (0-255) -> ascii index 
+    indices = ((downscaled / 255 * len(CHARS)).astype(np.uint8)) % len(CHARS)
     
-    return upscaled
+    # Sobel edge detection
+    gx = cv2.Sobel(dog, cv2.CV_32F, 1, 0, ksize=3)
+    gy = cv2.Sobel(dog, cv2.CV_32F, 0, 1, ksize=3)
+    magnitude = cv2.magnitude(gx, gy)
+    angle = np.arctan2(gy, gx)
+    
+    mag_norm = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX)
+    edge_mask = (mag_norm > 13).astype(np.uint8) * 255
+    
+    # Upscaling
+    indices_up = cv2.resize(indices, (gray_img.shape[1], gray_img.shape[0]), interpolation=cv2.INTER_NEAREST)
+    edge_mask_up = cv2.resize(edge_mask, (gray_img.shape[1], gray_img.shape[0]), interpolation=cv2.INTER_NEAREST)
+    angle_up = cv2.resize(angle, (gray_img.shape[1], gray_img.shape[0]), interpolation=cv2.INTER_NEAREST)
+    
+    return indices_up, edge_mask_up, angle_up
     
