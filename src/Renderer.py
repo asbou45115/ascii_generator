@@ -4,12 +4,6 @@ import pyperclip
 
 CHARS = np.array(list(" .:coPO?@■"))   # ascii characters in order of luminance (darkest to brightest)
 CHAR_PIXEL_SIZE = 8                     # ascii characters are 8x8 pixels
-EDGE_CHARS = {
-    0: '-',
-    45:  '/',
-    90: '|',
-    135: '\\'
-}
 
 class Renderer:
     def  __init__(self):
@@ -53,11 +47,11 @@ class Renderer:
                     if 22.5 < ang <= 67.5:
                         char = '/'
                     elif 67.5 < ang <= 112.5:
-                        char = '|'
+                        char = '-'
                     elif 112.5 < ang <= 157.5:
                         char = '\\'
                     else:
-                        char = '-'
+                        char = '|'
 
                 cv2.putText(
                     output_img,
@@ -99,11 +93,11 @@ class Renderer:
                     if 22.5 < ang <= 67.5:
                         char = '/'
                     elif 67.5 < ang <= 112.5:
-                        char = '|'
+                        char = '-'
                     elif 112.5 < ang <= 157.5:
                         char = '\\'
                     else:
-                        char = '-'
+                        char = '|'
                 line.append(char)
             ascii_lines.append(''.join(line))
         return "\n".join(ascii_lines)
