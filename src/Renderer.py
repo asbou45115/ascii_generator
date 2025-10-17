@@ -18,7 +18,7 @@ class Renderer:
     @staticmethod
     def get_image_from_file(file_path: str, upscale_height: int=1080, upscale_width: int=1920) -> np.ndarray:
         '''
-        Reads image and upscales image if less than given upscale values
+        Reads image and up/downscales image with given params
         '''
         img = cv2.imread(file_path)
         if img is None:
@@ -26,10 +26,9 @@ class Renderer:
             return None
 
         h, w = img.shape[:2]
-        if w < upscale_width or h < upscale_height:
-            scale = upscale_width / w
-            height = int(h * scale)
-            img = cv2.resize(img, (upscale_width, height), interpolation=cv2.INTER_LANCZOS4)
+        scale = upscale_width / w
+        height = int(h * scale)
+        img = cv2.resize(img, (upscale_width, height), interpolation=cv2.INTER_LANCZOS4)
 
         return img
     

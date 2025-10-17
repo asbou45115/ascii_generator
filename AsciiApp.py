@@ -22,6 +22,8 @@ class AsciiApp(QMainWindow):
         self.edge_tolerance = 13
         self.custom_w = 1920
         self.custom_h = 1080
+        self.native_w = None
+        self.native_h = None
 
         # --- Image preview labels ---
         self.input_label = QLabel("No image loaded")
@@ -48,6 +50,9 @@ class AsciiApp(QMainWindow):
         # --- Resolution dropdown ---
         self.resolution_combo = QComboBox()
         self.resolution_combo.addItems([
+            "Native resolution",
+            "480p (854x480)",
+            "720p (1280x720)",
             "1080p (1920x1080)",
             "1440p (2560x1440)",
             "4K (3840x2160)",
@@ -64,7 +69,7 @@ class AsciiApp(QMainWindow):
             w.setFixedWidth(70)
             w.editingFinished.connect(self.custom_resolution_changed)
 
-        # hide these initially
+        # Hide these initially
         self.width_input.setVisible(False)
         self.height_input.setVisible(False)
         self.width_label.setVisible(False)
@@ -120,25 +125,31 @@ class AsciiApp(QMainWindow):
     def change_resolution(self, text):
         """Handle preset dropdown change and show/hide custom inputs."""
         options = {
+            "480p (854x480)": (854, 480),
+            "720p (1280x720)": (1280, 720),
             "1080p (1920x1080)": (1920, 1080),
             "1440p (2560x1440)": (2560, 1440),
             "4K (3840x2160)": (3840, 2160)
         }
 
         is_custom = text == "Custom"
+        is_native = text.startswith("Native")
 
         self.width_input.setVisible(is_custom)
         self.height_input.setVisible(is_custom)
         self.width_label.setVisible(is_custom)
         self.height_label.setVisible(is_custom)
 
-        if not is_custom:
-            self.upscale_width, self.upscale_height = options[text]
-            self.statusBar().showMessage(f"Resolution set to {text}")
-        else:
+        if is_custom:
             self.width_input.setText(str(self.custom_w))
             self.height_input.setText(str(self.custom_h))
             self.statusBar().showMessage("Enter custom width and height")
+        elif is_native and self.native_w and self.native_h:
+            self.upscale_width, self.upscale_height = self.native_w, self.native_h
+            self.statusBar().showMessage(f"Resolution set to native: {self.native_w}x{self.native_h}")
+        elif text in options:
+            self.upscale_width, self.upscale_height = options[text]
+            self.statusBar().showMessage(f"Resolution set to {text}")
 
     def custom_resolution_changed(self):
         """When user finishes typing in custom width/height."""
@@ -178,9 +189,17 @@ class AsciiApp(QMainWindow):
         self.render_btn.setEnabled(True)
 
         # Show first image preview
-        img = Renderer.get_image_from_file(file_paths[0], self.upscale_height, self.upscale_width)
+        img = Renderer.get_image_from_file(file_paths[0])
         if img is not None:
             self._show_cv_image(self.input_label, img)
+            h, w, _ = img.shape
+            self.native_w, self.native_h = w, h
+
+            # Update combo label dynamically
+            self.resolution_combo.setItemText(0, f"Native resolution ({w}x{h})")
+            self.resolution_combo.setCurrentIndex(0)
+            self.upscale_width, self.upscale_height = w, h
+            self.statusBar().showMessage(f"Using native resolution: {w}x{h}")
 
     def render_ascii(self):
         """Render ASCII art for all loaded images."""

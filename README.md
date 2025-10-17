@@ -9,7 +9,7 @@ A simple desktop application to convert images into ASCII art using Python. User
 ## Features
 - Load one or multiple images at once.
 - Render ASCII art previews in real time.
-- Adjust upscale resolution: choose from presets or enter custom width/height.
+- Adjust up/downscale resolution: choose from presets or enter custom width/height.
 - Adjust edge detection sensitivity using a slider or numeric input.
 - Save rendered ASCII images to a folder of your choice.
    - Or print as ASCII text
@@ -80,8 +80,8 @@ A simple desktop application to convert images into ASCII art using Python. User
 ## How it Works
 The ASCII Renderer converts images into ASCII art using a combination of image processing and character mapping. Here's a step-by-step breakdown:
 
-1) **Image Loading and Upscaling**  
-   - If the image is smaller than the selected resolution, it is upscaled using **Lanczos interpolation** to preserve quality while enlarging  
+1) **Image Loading and scaling**  
+   - Image is scaled using **Lanczos interpolation** to preserve quality while enlarging or downscaling
 
 2) **Grayscale Conversion**  
    - The image is converted to **grayscale**
