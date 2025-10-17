@@ -179,7 +179,7 @@ class AsciiApp(QMainWindow):
             self,
             "Open Images",
             "",
-            "Images (*.png *.jpg *.jpeg *.bmp *.tiff)"
+            "Images (*.png *.jpg *.jpeg *.bmp *.tiff *.webp)"
         )
         if not file_paths:
             return
